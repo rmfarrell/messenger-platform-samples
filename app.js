@@ -1,12 +1,11 @@
-'use strict';
-
 const
   bodyParser = require('body-parser'),
   config = require('config'),
   crypto = require('crypto'),
   express = require('express'),
   https = require('https'),
-  request = require('request');
+  request = require('request'),
+  SkinToneFinder = require('./skintonefinder.js')
 
 var app = express();
 app.set('port', process.env.PORT || 5000);
@@ -304,7 +303,18 @@ function receivedMessage(event) {
         sendTextMessage(senderID, messageText);
     }
   } else if (messageAttachments) {
-    sendTextMessage(senderID, "Message with attachment received");
+    var url = messageAttachments[0].payload.url
+    var s = new SkinToneFinder({
+      subscriptionKey: MS_FACE_API_KEY,
+      src: url
+    })
+    s.findAverageColorSample()
+      .then((dat) => {
+        console.log(dat)
+        sendTextMessage(senderID, dat[0])
+        sendTextMessage(senderID, 'test')
+      })
+    .catch(err => console.log(err))
   }
 }
 
